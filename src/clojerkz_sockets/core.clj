@@ -1,5 +1,5 @@
 (ns clojerkz-sockets.core
-  (:require [clojure.core.async :refer [go chan map< put! >! <!]]
+  (:require [clojure.core.async :refer [go chan map< put! >! <! <!!]]
             [clojure.java.io :as io])
   (:import [java.net.ServerSocket]))
 
@@ -55,3 +55,12 @@
      (let [msg (<! in)]
        (println (str "received message: " msg))
        (put! out (str "you said \"" msg "\"\n"))))))
+
+(defn echo-connections [port]
+  (let [connections (start-server :port port)]
+    (go (while true
+      (let [conn (<! connections)]
+        (echo conn))))))
+
+(defn -main [& args]
+  (<!! (echo-connections 8080)))
