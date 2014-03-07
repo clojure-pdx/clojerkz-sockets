@@ -35,8 +35,9 @@
 (defn shutdown [{:keys [shutdown]}]
   (shutdown))
 
-(defn echo [{:keys [in]}]
+(defn echo [{:keys [in out]}]
   (go
    (while true
      (let [msg (<! in)]
-       (println (str "received message: " msg))))))
+       (println (str "received message: " msg))
+       (put! out (str "you said \"" msg "\"\n"))))))
