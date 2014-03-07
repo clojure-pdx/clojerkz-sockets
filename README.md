@@ -1,10 +1,17 @@
 # clojerkz-sockets
 
-A Clojure library designed to ... well, that part is up to you.
+A socket server we wrote at Cløhäck 3/6/2014
 
 ## Usage
 
-FIXME
+lein run -m clojerkz-sockets.core
+
+## Authors
+
+- Jed Clinger - jed.clinger@gmail.com
+- Russell Mull - russell@digitalartificer.com
+- Justin Holguín - justin.h.holguin@gmail.com
+- Benjamin Vulpes - ben@survantjames.com
 
 ## License
 
