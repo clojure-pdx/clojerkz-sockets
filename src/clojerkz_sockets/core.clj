@@ -3,34 +3,48 @@
             [clojure.java.io :as io])
   (:import [java.net.ServerSocket]))
 
-(defn start-server [& {:keys [port]}]
-  (let [server-sock (java.net.ServerSocket. port)
-        sock (future (.accept server-sock))
-        in-stream (future (.getInputStream @sock))
-        out-stream (future (.getOutputStream @sock))
+(defn socket-connection [sock]
+  (let [in-stream (.getInputStream sock)
+        out-stream (.getOutputStream sock)
+        reader (io/reader in-stream)
+        writer (io/writer out-stream)
         in (chan)
         out (chan)]
-    (println "listening on port 8080")
-    (go
-     (let [reader (io/reader @in-stream)]
-       (while true
-         (let [msg (.readLine reader)]
-           (>! in msg)))))
-    (go
-     (let [writer (io/writer @out-stream)]
-       (while true
-         (let [msg (<! out)]
-           (.write writer msg)
-           (.flush writer)))))
+    (go (while true
+          (let [msg (.readLine reader)]
+            (>! in msg))))
+    (go (while true
+          (let [msg (<! out)]
+            (.write writer msg)
+            (.flush writer))))
     {:in in
      :out out
-     :server server-sock
      :socket sock
      :shutdown (fn []
-                 (.close @in-stream)
-                 (.close @out-stream)
-                 (.close @sock)
-                 (.close server-sock))}))
+                 (.close in-stream)
+                 (.close out-stream)
+                 (.close sock))}))
+
+(defn start-server [& {:keys [port]}]
+  (let [server-sock (java.net.ServerSocket. port)
+        connections (chan)]
+
+    (go
+     (while true
+       (let [connection (.accept server-sock)]
+         (println "received connection")
+         (put! connections (socket-connection connection)))))
+
+    (println "listening on port" port)
+
+    connections))
+
+(defn relay [sock1 sock2]
+  (go
+   (while true
+     (let [msg (<! (:in sock1))]
+       (println "received message:" msg)
+       (put! (:out sock2) msg)))))
 
 (defn shutdown [{:keys [shutdown]}]
   (shutdown))
